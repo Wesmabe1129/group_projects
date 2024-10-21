@@ -1,7 +1,7 @@
 // const { DataTypes } = require('sequelize');
 import { DataTypes } from 'sequelize';
 // const sequelize = require('../config/database');
-import sequelize from '../config/database';
+import sequelize from '../core/database';
 // const Thread = require('./Thread');
 import Thread from './Thread';
 

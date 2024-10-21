@@ -164,7 +164,7 @@
                       <div class="post">
                         <h2>${post.title}</h2>
                         <p>${post.content}</p>
-                        <button onclick="loadPost('${post.thread_id}')">View Post</button>
+                        <button onclick="loadPost('${post.thread_id}')">Comment</button>
                       </div>
                     `;
                   });
@@ -249,13 +249,74 @@
         .then(data => {
           if (data?.success) {
             const post = data.data;
+            // <button onclick="loadComments('${post.id}')">View Comments</button>
             root.innerHTML = `
               <div class="post">
                 <h2>${post.title}</h2>
                 <p>${post.content}</p>
-                <button onclick="loadComments('${post.id}')">View Comments</button>
+                <div></div>
               </div>
-            `;
+
+              <div>
+                ${loadComments()}
+              </div>
+              <form id="create-comment-form" class="create-comment-form">
+                  <p>@${currentUsername}</p>
+                  <textarea placeholder="Add comment" class="thread-body" id="thread-body" required></textarea><br>
+                  <button type="submit">comment</button>
+              </form>
+              <nav class="navbar">
+                <button id="nav-search">Search</button>
+                <button id="nav-home">Home</button>
+                <button id="nav-create">Create</button>
+                <button id="nav-notif">Notification</button>
+                <button id="nav-profile">Profile</button>
+              </nav>
+        
+              `; // Replace this with your create page logic
+              // <input type="text" id="thread-title" required>
+              
+
+              document.getElementById('create-comment-form').addEventListener('click', function() {
+                handleCommentSubmission(threadId);
+              });
+              
+              document.getElementById('nav-search').addEventListener('click', handleSearch);
+              document.getElementById('nav-home').addEventListener('click', loadHomeFeeds);
+              document.getElementById('nav-create').addEventListener('click', handleCreate);
+              document.getElementById('nav-notif').addEventListener('click', handleNotif);
+              document.getElementById('nav-profile').addEventListener('click', handleProfile);
+          }
+        })
+        .catch(err => console.log(err));
+      }
+
+      function handleCommentSubmission(thread_id) {
+
+        const commentBody = document.getElementById('thread-body').value;
+        const commentTitle = `@${currentUsername}`;
+        const payload = JSON.stringify({
+          title: commentTitle,
+          content: commentBody,
+          accountId: accountId, // You can get the actual account ID from the user details
+        });
+
+        fetch(`${API_URL}/v1/thread/${thread_id}/comment`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            apikey: 'hello',
+            token: localStorage.getItem('token'),
+          },
+          body: payload,
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            alert('Thread created successfully!');
+            loadHomeFeeds(); // Redirect back to home feed
+          } else {
+            alert('Failed to create thread.');
           }
         })
         .catch(err => console.log(err));
@@ -377,6 +438,8 @@
         `;
 
         document.getElementById('create-thread-form').addEventListener('submit', handleThreadSubmission);
+
+
         document.getElementById('nav-search').addEventListener('click', handleSearch);
         document.getElementById('nav-home').addEventListener('click', loadHomeFeeds);
         document.getElementById('nav-create').addEventListener('click', handleCreate);
