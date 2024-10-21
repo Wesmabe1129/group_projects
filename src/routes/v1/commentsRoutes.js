@@ -1,24 +1,19 @@
 // postsRoutes.js
 import express from 'express';
 // import PostsController from '../../controllers/v1/threadController.js';
-import threadController from '../../controllers/v1/commentController.js';
+import commentController from '../../controllers/v1/commentController.js';
 
 const commentRouter = express.Router();
 
 
-threadRouter.post('/', threadController.createPost.bind(threadController));
+commentRouter.post('/:thread_id/comment', commentController.createComment.bind(commentController));
 
-// Route to get posts with optional query parameters: limits, offset, sortBy
-threadRouter.get('/', threadController.getPosts.bind(threadController));
-// console.log(threadRouter.get('/', threadController.getPosts.bind(threadController)));
+commentRouter.get('/:thread_id/comments', commentController.getCommentByThreadId.bind(commentController));
 
-// Route to get a specific post by ID
-threadRouter.get('/:thread_id', threadController.getPostById.bind(threadController));
 
-// Route to get comments for a specific post
-threadRouter.get('/:postId/comments', threadController.getPostComments.bind(threadController));
+// console.log(commentRouter)
 
 // Route to get replies for a specific comment on a post
-threadRouter.get('/:postId/comments/:commentId/replies', threadController.getCommentReplies.bind(threadController));
+// commentRouter.get('/:postId/comments/:commentId/replies', commentController.getCommentReplies.bind(commentController));
 
 export default commentRouter;

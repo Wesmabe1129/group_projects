@@ -15,9 +15,9 @@ threadRouter.get('/', threadController.getPosts.bind(threadController));
 threadRouter.get('/:thread_id', threadController.getPostById.bind(threadController));
 
 // Route to get comments for a specific post
-threadRouter.get('/:postId/comments', threadController.getPostComments.bind(threadController));
+// threadRouter.get('/:postId/comments', threadController.getPostComments.bind(threadController));
 
 // Route to get replies for a specific comment on a post
-threadRouter.get('/:postId/comments/:commentId/replies', threadController.getCommentReplies.bind(threadController));
+// threadRouter.get('/:postId/comments/:commentId/replies', threadController.getCommentReplies.bind(threadController));
 
 export default threadRouter;

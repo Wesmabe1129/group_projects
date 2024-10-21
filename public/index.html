@@ -239,6 +239,7 @@
 
       function loadPost(threadId) {
         fetch(`${API_URL}/v1/thread/${threadId}`, {
+          method: 'GET',
           headers: {
             'accept': 'application/json',
             apikey: 'hello',
@@ -251,18 +252,20 @@
             const post = data.data;
             // <button onclick="loadComments('${post.id}')">View Comments</button>
             root.innerHTML = `
-              <div class="post">
-                <h2>${post.title}</h2>
-                <p>${post.content}</p>
-                <div></div>
-              </div>
+              <div class="comments">
+                
+                <div class="head-post">
+                  <h2>${post.title}</h2>
+                  <p>${post.content}</p>
+                </div>
 
-              <div>
-                ${loadComments()}
+                <h3>Comments: </h3>
+                <div class="comments-container"></div>
+                
               </div>
               <form id="create-comment-form" class="create-comment-form">
-                  <p>@${currentUsername}</p>
-                  <textarea placeholder="Add comment" class="thread-body" id="thread-body" required></textarea><br>
+                  <p id="comment-title">@${currentUsername}</p>
+                  <textarea placeholder="Add comment" class="comment-body" id="comment-body" required></textarea><br>
                   <button type="submit">comment</button>
               </form>
               <nav class="navbar">
@@ -276,8 +279,11 @@
               `; // Replace this with your create page logic
               // <input type="text" id="thread-title" required>
               
+              loadComments(threadId);
 
-              document.getElementById('create-comment-form').addEventListener('click', function() {
+
+              document.getElementById('create-comment-form').addEventListener('submit', (e) => {
+                e.preventDefault();
                 handleCommentSubmission(threadId);
               });
               
@@ -293,14 +299,17 @@
 
       function handleCommentSubmission(thread_id) {
 
-        const commentBody = document.getElementById('thread-body').value;
-        const commentTitle = `@${currentUsername}`;
+        const commentBody = document.getElementById('comment-body').value;
+        const commentTitle = document.getElementById('comment-title').textContent;
         const payload = JSON.stringify({
+          parent_thread_id: thread_id,
           title: commentTitle,
           content: commentBody,
           accountId: accountId, // You can get the actual account ID from the user details
         });
 
+
+        console.log(payload);
         fetch(`${API_URL}/v1/thread/${thread_id}/comment`, {
           method: 'POST',
           headers: {
@@ -312,18 +321,34 @@
         })
         .then(res => res.json())
         .then(data => {
+          console.log(data);
           if (data.success) {
-            alert('Thread created successfully!');
-            loadHomeFeeds(); // Redirect back to home feed
+            alert('Comment Successfully!');
+            loadPost(thread_id); // Redirect back to home feed
           } else {
-            alert('Failed to create thread.');
+            alert('Failed to comment to thread.');
           }
         })
         .catch(err => console.log(err));
       }
 
-      function loadComments(postId) {
-        fetch(`${API_URL}/v1/posts/${postId}/comments`, {
+      function loadComments(thread_id){
+        console.log(thread_id);
+        const url = `${API_URL}/v1/thread/${thread_id}/comments`;
+        console.log(url);
+
+        // try {
+        //     const response = fetch(url);
+        //     if (!response.ok) {
+        //         throw new Error(`HTTP error! status: ${response.status}`);
+        //     }
+        //     const comments = response.json();
+        //     // Process comments...
+        // } catch (error) {
+        //     console.error('Failed to load comments:', error);
+        // }
+        fetch(url, {
+          method: 'GET',
           headers: {
             'accept': 'application/json',
             apikey: 'hello',
@@ -333,18 +358,16 @@
         .then(res => res.json())
         .then(data => {
           if (data?.success) {
+            const commentsContainer = document.querySelector('.comments-container');
             const comments = data.data.map(comment => `
               <div class="comment">
+                <h2>${comment.title}</h2>
                 <p>${comment.content}</p>
-                <button onclick="loadReplies('${postId}', '${comment.id}')">View Replies</button>
+                <button onclick="loadReplies('${thread_id}', '${comment.thread_id}')">View Replies</button>
               </div>
             `).join('');
             
-            root.innerHTML += `
-              <div class="comments">
-                ${comments}
-              </div>
-            `;
+            commentsContainer.innerHTML = comments; 
           }
         })
         .catch(err => console.log(err));

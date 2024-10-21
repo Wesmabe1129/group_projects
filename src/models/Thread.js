@@ -87,7 +87,7 @@ class Thread {
     try {
       // console.log('Fetching posts for thread_id:'); // Log the thread_id
       const [results] = await this.thread_db.execute(
-        `SELECT * FROM threads`
+        `SELECT * FROM threads WHERE parent_thread_id IS NULL`
       );
       return results;
     } catch (err) {

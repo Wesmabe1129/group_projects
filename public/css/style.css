@@ -43,6 +43,20 @@ body, html {
 }
 
 
+
+
+.comments {
+  display: flex;
+  justify-content: center;
+  align-items: center;  
+  flex-direction: column;
+}
+
+.head-post {
+  justify-content: left;
+  align-items: left; 
+}
+
 /* <form id="create-thread-form">
   <label>Title: <input type="text" id="thread-title" required></label><br>
   <label>Body: <textarea id="thread-body" required></textarea></label><br>
