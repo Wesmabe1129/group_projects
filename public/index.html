@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login & Sign Up</title>
+    <link href="./css/style.css" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      const API_URL = 'http://localhost:3000';
+      const root = document.getElementById('root');
+      let currentUsername = '';
+      let accountId = 0;
+
+      function showLogin() {
+        root.innerHTML = `
+          <form id="login" action="#" method="post">
+            <label for="username">Username</label>
+            <input type="text" name="username" id="username">
+            <label for="password">Password</label>
+            <input type="password" name="password" id="password">
+            <button type="submit">Login</button>
+            <p>Don't have an account? <a href="#" id="showSignUp">Sign Up</a></p>
+          </form>
+        `;
+
+        document.getElementById("login").addEventListener('submit', handleLogin);
+        document.getElementById("showSignUp").addEventListener('click', showSignUp);
+      }
+
+      function showSignUp() {
+        root.innerHTML = `
+          <form id="signup" action="#" method="post">
+            <label for="username">Username</label>
+            <input type="text" name="username" value="" id="login_username"><br><br>
+            <label for="password">Password</label>
+            <input type="password" name="password" value="" id="login_password"><br><br>
+            <input type="checkbox" name="show_password" value="" id="show_password"> Show Password
+            <button type="submit">Create Account</button>
+          </form>
+          <p>Already have an account?</p>
+
+          <br>
+          <br>
+          <form id="login" action="#" method="post">
+            <input type="text" name="username" value="" placeholder="Username" id="username">
+            <input type="password" name="password" value="" placeholder="Password" id="password">
+            <br><br>
+            <button type="submit">Login</button>
+            <button type="submit">Forgot Password?</button>
+          </form>
+        `;
+
+        document.getElementById("signup").addEventListener('submit', handleSignUp);
+      }
+
+      function handleLogin(e) {
+        e.preventDefault();
+
+        const formData = new FormData(e.target);
+        const payload = JSON.stringify(Object.fromEntries(formData));
+
+        fetch(`${API_URL}/v1/account/login`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            apikey: 'hello',
+          },
+          body: payload,
+        })
+        .then(data => data.json())
+        .then(data => {
+          if (data.success) {
+            localStorage.setItem('token', data.data.token);
+            root.innerHTML = '';
+            loadHomeFeeds();
+          } else {
+            alert(data.message);
+          }
+        })
+        .catch(err => console.log(err));
+      }
+
+      function handleSignUp(e) {
+        e.preventDefault();
+
+        const formData = new FormData(e.target);
+        const payload = JSON.stringify(Object.fromEntries(formData));
+
+        fetch(`${API_URL}/v1/account`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            apikey: 'hello',
+          },
+          body: payload,
+        })
+        .then(data => data.json())
+        .then(data => {
+          if (data.success) {
+            alert('Account created successfully. Please login.');
+            showLogin();
+          } else {
+            alert(data.message);
+          }
+        })
+        .catch(err => console.log(err));
+      }
+
+      function loadHomeFeeds() {
+          fetch(`${API_URL}/v1/account`, {
+            headers: {
+              'accept': 'application/json',
+              apikey: 'hello',
+              token: localStorage.getItem('token'),
+            }
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data?.success) {
+              currentUsername = data.data.username;
+              accountId = data.data.account_id;
+
+              const url = `${API_URL}/v1/thread`;
+
+              fetch(url, {
+                method: 'GET',
+                headers: {
+                  'content-type': 'application/json',
+                  'accept': 'application/json',
+                  apikey: 'hello',
+                  token: localStorage.getItem('token'),
+                }
+              })
+              .then(res => {
+                if (res.status === 204) {
+                    // No content - show a friendly message
+                    displayNoPostsMessage();
+                    console.log("204 error")
+                    return;
+                }
+                // if (res.status >= 400) {
+                //   throw new Error(`HTTP error! status: ${res.status}`);
+                // }   
+                // console.log(res.status);
+                return res.json();
+              })
+              .then(postsData => {
+                // console.log('Posts data:', postsData);
+                if (postsData?.success) {
+                  
+                  if (postsData.data.length === 0) {
+                    // No posts in the response
+                    displayNoPostsMessage();
+                    return;
+                  }
+                  
+                  let postsHTML = '';
+                  postsData.data.forEach(post => {
+                    console.log(post.thread_id);
+                    postsHTML += `
+                      <div class="post">
+                        <h2>${post.title}</h2>
+                        <p>${post.content}</p>
+                        <button onclick="loadPost('${post.thread_id}')">View Post</button>
+                      </div>
+                    `;
+                  });
+                  
+
+                  // Inject the HTML into the root element
+                  root.innerHTML = `
+                    <nav class="navbar">
+                      <button id="nav-search">Search</button>
+                      <button id="nav-home">Home</button>
+                      <button id="nav-create">Create</button>
+                      <button id="nav-notif">React</button>
+                      <button id="nav-profile">Profile</button>
+                    </nav>
+                    <div class="content">
+                      <h3>HOME</h3>
+                      ${postsHTML}
+                    </div>
+                  `;
+                  // console.log(posts);
+
+                  // Set up event listeners for navigation buttons
+                  document.getElementById('nav-search').addEventListener('click', handleSearch);
+                  document.getElementById('nav-create').addEventListener('click', handleCreate);
+                  document.getElementById('nav-notif').addEventListener('click', handleNotif);
+                  document.getElementById('nav-profile').addEventListener('click', handleProfile);
+                } else {
+                  // alert('Failed to load posts. Please try again.');
+                  displayNoPostsMessage();
+                }
+              })
+              .catch(err => {
+                console.log(err);
+                alert('An error occurred while loading posts. Please try again later.');
+                localStorage.removeItem('token');
+                showLogin();
+              });
+          } else {
+            // Remove token and redirect to login only if the account verification fails
+            localStorage.removeItem('token');
+            showLogin();
+          }
+        })
+        .catch(err => {
+          console.log(err);
+          alert('An error occurred while verifying account. Please try again later.');
+        });
+      }
+
+      function displayNoPostsMessage() {
+        root.innerHTML = `
+          <nav class="navbar">
+              <button id="nav-search">Search</button>
+              <button id="nav-home">Home</button>
+              <button id="nav-create">Create</button>
+              <button id="nav-notif">Notification</button>
+              <button id="nav-profile">Profile</button>
+          </nav>
+          <div class="content">
+              <h3>HOME</h3>
+              <p>No posts available at the moment. Check back later!</p>
+          </div>
+        `;
+
+        // Set up event listeners for navigation buttons
+        document.getElementById('nav-search').addEventListener('click', handleSearch);
+        document.getElementById('nav-create').addEventListener('click', handleCreate);
+        document.getElementById('nav-notif').addEventListener('click', handleNotif);
+        document.getElementById('nav-profile').addEventListener('click', handleProfile);
+      }
+
+
+      function loadPost(threadId) {
+        fetch(`${API_URL}/v1/thread/${threadId}`, {
+          headers: {
+            'accept': 'application/json',
+            apikey: 'hello',
+            token: localStorage.getItem('token'),
+          }
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data?.success) {
+            const post = data.data;
+            root.innerHTML = `
+              <div class="post">
+                <h2>${post.title}</h2>
+                <p>${post.content}</p>
+                <button onclick="loadComments('${post.id}')">View Comments</button>
+              </div>
+            `;
+          }
+        })
+        .catch(err => console.log(err));
+      }
+
+      function loadComments(postId) {
+        fetch(`${API_URL}/v1/posts/${postId}/comments`, {
+          headers: {
+            'accept': 'application/json',
+            apikey: 'hello',
+            token: localStorage.getItem('token'),
+          }
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data?.success) {
+            const comments = data.data.map(comment => `
+              <div class="comment">
+                <p>${comment.content}</p>
+                <button onclick="loadReplies('${postId}', '${comment.id}')">View Replies</button>
+              </div>
+            `).join('');
+            
+            root.innerHTML += `
+              <div class="comments">
+                ${comments}
+              </div>
+            `;
+          }
+        })
+        .catch(err => console.log(err));
+      }
+
+      function loadReplies(postId, commentId) {
+        fetch(`${API_URL}/v1/posts/${postId}/comments/${commentId}/replies`, {
+          headers: {
+            'accept': 'application/json',
+            apikey: 'hello',
+            token: localStorage.getItem('token'),
+          }
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data?.success) {
+            const replies = data.data.map(reply => `
+              <div class="reply">
+                <p>${reply.content}</p>
+              </div>
+            `).join('');
+            
+            root.innerHTML += `
+              <div class="replies">
+                ${replies}
+              </div>
+            `;
+          }
+        })
+        .catch(err => console.log(err));
+      }
+
+      function handleSearch() {
+        root.innerHTML = `
+        <div class="header">
+          <h2>Search Thread</h2>
+        </div>
+
+        <div class="search-bar">
+            <input class="inp-search" type="text" placeholder="Search">
+            <div class="image-container">
+                
+            </div>
+        </div>
+
+        <div class="search-content">
+          <div class="left-pannel">
+            <h3>Trending Topics</h3>
+          </div>        
+          <div class="right-pannel">
+            <h3>Follow Suggestions</h3>
+          </div>        
+        </div>
+        
+        <nav class="navbar">
+          <button id="nav-search">Search</button>
+          <button id="nav-home">Home</button>
+          <button id="nav-create">Create</button>
+          <button id="nav-notif">Notification</button>
+          <button id="nav-profile">Profile</button>
+        </nav>
+        
+        `; // Replace this with your create page logic
+        // <input type="text" id="thread-title" required>
+
+        document.getElementById('nav-search').addEventListener('click', handleSearch);
+        document.getElementById('nav-home').addEventListener('click', loadHomeFeeds);
+        document.getElementById('nav-create').addEventListener('click', handleCreate);
+        document.getElementById('nav-notif').addEventListener('click', handleNotif);
+        document.getElementById('nav-profile').addEventListener('click', handleProfile);
+      }
+      
+      function handleCreate() {
+        root.innerHTML = `
+          <div class="header">
+            <h2>Create Thread</h2>
+          </div>
+          <form id="create-thread-form" class="create-thread-form">
+              <p>@${currentUsername}</p>
+              <textarea placeholder="What's on your mind?" class="thread-body" id="thread-body" required></textarea><br>
+              <button type="submit">Create Thread</button>
+          </form>
+          
+          <nav class="navbar">
+            <button id="nav-search">Search</button>
+            <button id="nav-home">Home</button>
+            <button id="nav-create">Create</button>
+            <button id="nav-notif">Notification</button>
+            <button id="nav-profile">Profile</button>
+          </nav>
+        `;
+
+        document.getElementById('create-thread-form').addEventListener('submit', handleThreadSubmission);
+        document.getElementById('nav-search').addEventListener('click', handleSearch);
+        document.getElementById('nav-home').addEventListener('click', loadHomeFeeds);
+        document.getElementById('nav-create').addEventListener('click', handleCreate);
+        document.getElementById('nav-notif').addEventListener('click', handleNotif);
+        document.getElementById('nav-profile').addEventListener('click', handleProfile);
+      }
+
+      function handleThreadSubmission(e) {
+        e.preventDefault();
+
+        const threadBody = document.getElementById('thread-body').value;
+        const threadTitle = `@${currentUsername}`;
+        const payload = JSON.stringify({
+          title: threadTitle,
+          content: threadBody,
+          accountId: accountId, // You can get the actual account ID from the user details
+        });
+
+        fetch(`${API_URL}/v1/thread`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            apikey: 'hello',
+            token: localStorage.getItem('token'),
+          },
+          body: payload,
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            alert('Thread created successfully!');
+            loadHomeFeeds(); // Redirect back to home feed
+          } else {
+            alert('Failed to create thread.');
+          }
+        })
+        .catch(err => console.log(err));
+      }
+
+      
+      function handleNotif() {
+        root.innerHTML = `
+        <div class="header">
+          <h2>Notification</h2>
+        </div>
+
+        <nav class="notif-nav">
+          <div class="left-nav">
+            <button id="">All Notifications</button>
+            <button id="">New Followers</button>
+            <button id="">Mentions</button>
+          </div>
+          <div class="right-nav">
+            <button id="">Mark all as read</button>
+          </div>
+          
+        </nav>
+
+        <div class="notif-content">
+          <h1>NOTIFICATION'S CONTENT</h1>
+        </div>
+        
+        <nav class="navbar">
+          <button id="nav-search">Search</button>
+          <button id="nav-home">Home</button>
+          <button id="nav-create">Create</button>
+          <button id="nav-notif">Notification</button>
+          <button id="nav-profile">Profile</button>
+        </nav>
+        
+
+        
+        `; // Replace this with your create page logic
+
+        document.getElementById('nav-search').addEventListener('click', handleSearch);
+        document.getElementById('nav-home').addEventListener('click', loadHomeFeeds);
+        document.getElementById('nav-create').addEventListener('click', handleCreate);
+        document.getElementById('nav-notif').addEventListener('click', handleNotif);
+        document.getElementById('nav-profile').addEventListener('click', handleProfile);
+      }
+      
+      // function handleProfile() {
+      //   loadProfile(); // Load user profile
+      // }
+      
+      function handleLogout() {
+        localStorage.removeItem('token');
+        showLogin();
+      }
+
+
+      function handleProfile() {
+        root.innerHTML = `
+        <div class="header">
+          <h2>Profile Thread</h2>
+        </div>
+        <div class="logout-btn">
+          <button id="logout">logout</button>
+        </div>
+        
+        <nav class="navbar">
+          <button id="nav-search">Search</button>
+          <button id="nav-home">Home</button>
+          <button id="nav-create">Create</button>
+          <button id="nav-notif">Notification</button>
+          <button id="nav-profile">Profile</button>
+        </nav>
+        
+
+        
+        `; // Replace this with your create page logic
+
+        document.getElementById('logout').addEventListener('click', handleLogout);
+
+
+        document.getElementById('nav-search').addEventListener('click', handleSearch);
+        document.getElementById('nav-home').addEventListener('click', loadHomeFeeds);
+        document.getElementById('nav-create').addEventListener('click', handleCreate);
+        document.getElementById('nav-notif').addEventListener('click', handleNotif);
+        document.getElementById('nav-profile').addEventListener('click', handleProfile);
+      }
+
+
+      function showProfile() {
+        fetch(`${API_URL}/v1/account/`, {
+          headers: {
+            'accept': 'application/json',
+            apikey: 'hello',
+            token: localStorage.getItem('token'),
+          }
+        })
+      }
+
+      (() => {
+        if (localStorage.getItem('token')) {
+          loadHomeFeeds();
+        } else {
+          showLogin();
+        }
+      })();
+    </script>
+  </body>
+</html>
