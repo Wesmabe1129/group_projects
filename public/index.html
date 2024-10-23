@@ -13,6 +13,12 @@
       const root = document.getElementById('root');
       let currentUsername = '';
       let accountId = 0;
+      // const likeCount = {
+      //   "likeCounter": 0,
+      //   "accountId": accountId,
+      //   "username": currentUsername,
+      //   "threadId": '',
+      // };
 
       function showLogin() {
         root.innerHTML = `
@@ -150,7 +156,6 @@
                 return res.json();
               })
               .then(postsData => {
-                console.log('Posts data:', postsData);
                 if (postsData?.success) {
                   const threads = postsData.data.threads;
                   if (threads === 0) {
@@ -161,16 +166,20 @@
                   
                   let postsHTML = '';
                   threads.forEach(post => {
-                    // console.log(post.thread_id, "hahahasad");
-                    const likes = post.likes || [];  // Ensure it's an array
-                    const isLiked = likes.some(like => like.account_id === accountId); // Check if the user has liked
+                    // console.log(post.thread_id, "hahahasad")
+                    const likes = post.likes || [];
+                    const isLiked = likes?.some(like => like.account_id === accountId); // Check if the user has liked
                     const likeButtonClass = isLiked ? 'liked' : '';
-                    console.log(post.thread_id, "this is thread id");
-                    loadLike(post.thread_id)
+
+                    // console.log(post.thread_id, "this is thread id");
+                    
+                    // loadLike(post.thread_id)
+
                     postsHTML += `
-                      <div class="post" id="post-${post.thread_id}">
+                      <div id="post" class="post-${post.thread_id}">
                         <h2>${post.title}</h2>
                         <p>${post.content}</p>
+                        <span class="like-counter">0</span>
                         <button class="like-button ${likeButtonClass}" onclick="handleLike('${post.thread_id}')">Like</button>
                         <button onclick="loadPost('${post.thread_id}')">Comment</button>
                         <button>Repost</button>
@@ -196,10 +205,7 @@
                   // console.log(posts);
                   
                   // Set up event listeners for navigation buttons
-                  document.getElementById('nav-search').addEventListener('click', handleSearch);
-                  document.getElementById('nav-create').addEventListener('click', handleCreate);
-                  document.getElementById('nav-notif').addEventListener('click', handleNotif);
-                  document.getElementById('nav-profile').addEventListener('click', handleProfile);
+                  setupNavigationButtons();
                 } else {
                   // alert('Failed to load posts. Please try again.');
                   displayNoPostsMessage();
@@ -239,10 +245,7 @@
         `;
 
         // Set up event listeners for navigation buttons
-        document.getElementById('nav-search').addEventListener('click', handleSearch);
-        document.getElementById('nav-create').addEventListener('click', handleCreate);
-        document.getElementById('nav-notif').addEventListener('click', handleNotif);
-        document.getElementById('nav-profile').addEventListener('click', handleProfile);
+        setupNavigationButtons();
       }
 
 
@@ -260,26 +263,16 @@
           if (data?.success) {
             const post = data.data;
             console.log(data.data, "asdasdasd");
-            // console.log(post, "asdasdas")
-            // <button onclick="loadComments('${post.id}')">View Comments</button>
-
-            // console.log(data.data.thread_id, "this is id");
-
-            // const postElement = document.getElementById(`post-${data.data.thread_id}`);
-            // console.log(postElement, "this is element");
-            const likeButton = document.querySelector('.like-button');
-
-            const isLiked = likeButton.classList.toggle('liked')
-
-            const likeButtonClass = isLiked ? 'liked' : '';
+            
 
             root.innerHTML = `
               <div class="comments">
                 
-                <div class="head_post">
+                <div class="post-${post.thread_id}">
                   <h2>${post.title}</h2>
                   <p>${post.content}</p>
-                  <button class="like-button ${likeButtonClass}" onclick="handleLike('${post.thread_id}')">Like</button>
+                  <span class="like-counter">0</span>
+                  <button class="like-button" onclick="handleLike('${post.thread_id}')">Like</button>
 
                 </div>
 
@@ -311,11 +304,7 @@
                 handleCommentSubmission(threadId);
               });
               
-              document.getElementById('nav-search').addEventListener('click', handleSearch);
-              document.getElementById('nav-home').addEventListener('click', loadHomeFeeds);
-              document.getElementById('nav-create').addEventListener('click', handleCreate);
-              document.getElementById('nav-notif').addEventListener('click', handleNotif);
-              document.getElementById('nav-profile').addEventListener('click', handleProfile);
+              setupNavigationButtons();
           }
         })
         .catch(err => console.log(err));
@@ -380,11 +369,12 @@
                 console.log(comment.thread_id);
 
                 commentsHTML += `
-                    <div class="comment">
+                    <div class="post-${comment.thread_id}">
                         <h2>${comment.title}</h2>
                         <p>${comment.content}</p>
-                        <button>Like</button><button onclick="loadPost(${comment.thread_id})">Comment</button><button>Repost</button>
-                      </div>
+                        <span class="like-counter">0</span>
+                        <button class="like-button" onclick="handleLike('${comment.thread_id}')">Like</button>
+                        <button onclick="loadPost(${comment.thread_id})">Comment</button><button>Repost</button>
                         <div class="replies-container" id="replies-${comment.thread_id}" style="display: none;"></div>
                     </div>
                 `;
@@ -414,14 +404,7 @@
 
         .then(data => {
           if (data?.success) {
-            const post = data.data;
-            // console.log(data.data.thread_id)
-            const postElement = document.getElementById(`post-${thread_id}`);
-            const likeButton = postElement.querySelector('.like-button');
-
-            const likes = post.likes || [];  // Ensure it's an array
-            const isLiked = likes.some(like => like.account_id === accountId); // Check if the user has liked
-            const likeButtonClass = isLiked ? 'liked' : '';
+            
 
             data.data.forEach(like => {
                 // console.log(like.account_id);
@@ -440,40 +423,65 @@
       }
 
       function handleLike(thread_id) {
-        const postElement = document.getElementById(`post-${thread_id}`);
-        const likeButton = postElement.querySelector('.like-button');
-        // console.log(likeButton)
-
-        const isLiked = likeButton.classList.toggle('liked');
-        
-        const method = isLiked ? 'POST' : 'DELETE';
+        const likeButton = document.querySelector(`.post-${thread_id} .like-button`);
+        const likeCounter = document.querySelector(`.post-${thread_id} .like-counter`);
+        const isLiked = likeButton.classList.contains('liked');
+        const method = isLiked ? 'DELETE' : 'POST';
         const url = isLiked 
-        ? `${API_URL}/v1/thread/${thread_id}/like` 
-        : `${API_URL}/v1/thread/${thread_id}/unlike`;
-        
-        // const payload = JSON.stringify({ account_id: accountId });
+          ? `${API_URL}/v1/thread/${thread_id}/unlike` 
+          : `${API_URL}/v1/thread/${thread_id}/like`;
+
         const payload = JSON.stringify({ thread_id: thread_id, accountId: accountId });
-        // console.log(payload);
-        console.log(payload, "payssasdas");
-        fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': 'hello',
-                'token': localStorage.getItem('token'),
-            },
-            body: payload,
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                likeButton.style.color = isLiked ? 'blue' : ''; // Change color if liked
-                loadLike(thread_id);
-            } else {
-                alert('Failed to like/unlike the post.');
+        
+        const options = {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': 'hello',
+            'token': localStorage.getItem('token'),
+          },
+        };
+        
+        if (method === 'POST') {
+          options.body = payload;
+        }
+
+        fetch(url, options)
+          .then(res => {
+            if (!res.ok) {
+              throw new Error(`Request failed with status ${res.status}`);
             }
-        })
-        .catch(err => console.log(err));
+            return res.json();
+          })
+          .then(data => {
+            if (data.success) {
+              // Toggle the 'liked' class on the button
+              likeButton.classList.toggle('liked');
+              
+              // Update the likeCounter based on action
+              // Update the likeCounter based on action
+              let currentLikeCount = parseInt(likeCounter.textContent, 0);
+              if (method === 'POST') {
+                  currentLikeCount++;
+              } else {
+                  currentLikeCount--;
+              }
+              likeCounter.textContent = currentLikeCount;
+
+              // if (isLiked) {
+              //   likeButton.classList.remove('liked');
+              // } else {
+              //   likeButton.classList.add('liked');
+              // }
+
+              // Update UI if needed, e.g., display like count
+              // console.log('Likes Count:', `${likeCounter}`);
+              alert('Action succeeded');
+            } else {
+              alert('Failed to like/unlike the post.');
+            }
+          })
+          .catch(err => console.log(err));
       }
 
       
@@ -511,11 +519,7 @@
         `; // Replace this with your create page logic
         // <input type="text" id="thread-title" required>
 
-        document.getElementById('nav-search').addEventListener('click', handleSearch);
-        document.getElementById('nav-home').addEventListener('click', loadHomeFeeds);
-        document.getElementById('nav-create').addEventListener('click', handleCreate);
-        document.getElementById('nav-notif').addEventListener('click', handleNotif);
-        document.getElementById('nav-profile').addEventListener('click', handleProfile);
+        setupNavigationButtons();
       }
       
       function handleCreate() {
@@ -541,11 +545,7 @@
         document.getElementById('create-thread-form').addEventListener('submit', handleThreadSubmission);
 
 
-        document.getElementById('nav-search').addEventListener('click', handleSearch);
-        document.getElementById('nav-home').addEventListener('click', loadHomeFeeds);
-        document.getElementById('nav-create').addEventListener('click', handleCreate);
-        document.getElementById('nav-notif').addEventListener('click', handleNotif);
-        document.getElementById('nav-profile').addEventListener('click', handleProfile);
+       setupNavigationButtons();
       }
 
       function handleThreadSubmission(e) {
@@ -615,11 +615,7 @@
         
         `; // Replace this with your create page logic
 
-        document.getElementById('nav-search').addEventListener('click', handleSearch);
-        document.getElementById('nav-home').addEventListener('click', loadHomeFeeds);
-        document.getElementById('nav-create').addEventListener('click', handleCreate);
-        document.getElementById('nav-notif').addEventListener('click', handleNotif);
-        document.getElementById('nav-profile').addEventListener('click', handleProfile);
+        setupNavigationButtons();
       }
       
       // function handleProfile() {
@@ -655,7 +651,11 @@
 
         document.getElementById('logout').addEventListener('click', handleLogout);
 
+        setupNavigationButtons();
+        
+      }
 
+      function setupNavigationButtons() {
         document.getElementById('nav-search').addEventListener('click', handleSearch);
         document.getElementById('nav-home').addEventListener('click', loadHomeFeeds);
         document.getElementById('nav-create').addEventListener('click', handleCreate);

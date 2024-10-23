@@ -15,8 +15,9 @@ class Like {
     `;
     
     try {
-      const [result] = await connection.execute(query, [account_id, thread_id]);
-      return result;
+      // const [result] = await connection.execute(query, [account_id, thread_id]);
+      console.log('Add result:');
+      // return result;
     } catch (err) {
       console.error('Error adding like:', err.message);
       throw err;
@@ -40,9 +41,9 @@ class Like {
     `;
 
     try {
-      const [result] = await connection.execute(query, [thread_id, account_id]);
-      console.log('Delete result:', result);
-      return result;
+      // const [result] = await connection.execute(query, [thread_id, account_id]);
+      console.log('Delete result:' );
+      // return result;
     } catch (err) {
       console.error('Error removing like:', err.message);
       throw err;
@@ -57,16 +58,14 @@ class Like {
    */
   async getAllLikes(thread_id) {
     const query = `
-      SELECT * FROM likes
+        SELECT * FROM likes WHERE thread_id = ?
     `;
-    
     try {
-      const [likes] = await connection.execute(query);
-      // console.log(likes, "adsadasd")
-      return likes;
+        const [likes] = await connection.execute(query, [thread_id]);
+        return likes;
     } catch (err) {
-      console.error('Error fetching likes:', err.message);
-      throw err;
+        console.error('Error fetching likes:', err.message);
+        throw err;
     }
   }
 }

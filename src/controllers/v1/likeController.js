@@ -39,18 +39,13 @@ class LikeController {
    * @returns {void}
    */
   async removeLike(req, res) {
-    // const { thread_id } = req.params;
     const { thread_id, accountId } = req.body;
-    // const { account_id } = res.locals;
-    console.log(accountId, thread_id, "remove")
     try {
       await this.like.remove(thread_id, accountId);
-
       res.json({
         success: true,
         message: "Successfully removed like"
       });
-      // console.log(res)
     } catch (err) {
       res.json({
         success: false,
