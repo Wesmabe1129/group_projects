@@ -62,7 +62,7 @@ class threadController {
     try {
 
       const { postData } = req.body || {};
-      const { title, content, accountId } = postData[0] || req.body || {};
+      const { title, content, accountId } = req.body || postData[0] || {};
 
 
       // console.log(req,"habrdbiaebfopwb")
@@ -79,7 +79,7 @@ class threadController {
 
       res.status(result.affectedRows > 0 ? 201 : 500).json({
           success: result.affectedRows > 0,
-          message: result.affectedRows > 0 ? 'Post created successfully' : 'Failed to create post',
+          message: result.affectedRows > 1 ? 'Post created successfully' : 'Failed to create post',
           data: result.affectedRows > 0 ? { post_id: result.insertId } : null
       });
     } catch (error) {
