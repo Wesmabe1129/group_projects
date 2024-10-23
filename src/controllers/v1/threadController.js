@@ -16,17 +16,18 @@ class threadController {
       // console.log(thread_id, "12");
       
      
-      const posts = await this.thread.fetchAll();
+      const threads = await this.thread.fetchAll();
       // console.log(posts,'ETO YUNG POST HEHE')
-      if (!posts.length) {
-        return res.status(200).json({ success: true, message: 'No posts available', data: [] });
-      }
+      res.json({
+          success: true,
+          message: threads.length ? "Posts fetched successfully" : "No posts available",
+          data: { threads }
+      });
       
       // if (!thread_id) {
       //   return res.status(400).json({ success: false, message: 'thread_id is required', 'howtobedead':"magpuyat :)"});
       // }
   
-      res.json({ success: true, data: posts });
     } catch (error) {
       console.error('Error fetching posts:', error.message);
       res.status(500).json({ success: false, message: 'Failed to fetch posts' });
@@ -59,26 +60,31 @@ class threadController {
    */
   async createPost(req, res) {
     try {
-      console.log(req,"habrdbiaebfopwb")
-      const { title, content, accountId } = req.body;
+
+      const { postData } = req.body || {};
+      const { title, content, accountId } = postData[0] || req.body || {};
+
+
+      // console.log(req,"habrdbiaebfopwb")
+      // const { title, content, accountId } = req.body;
 
       // Validate the required fields
       console.log(req.body, "hello")
       if (!title || !content || !accountId) {
-        return res.status(400).json({ success: false, message: 'Title, content, and account ID are required' });
+        return res.status(400).json({ success: false, message: 'Title, content, and account ID are required', data: null });
       }
 
       // Use the Thread model's create method to add the post to the database
       const result = await this.thread.create(title, content, accountId);
 
-      if (result.affectedRows > 0) {
-        return res.status(201).json({ success: true, message: 'Post created successfully' });
-      } else {
-        return res.status(500).json({ success: false, message: 'Failed to create post' });
-      }
+      res.status(result.affectedRows > 0 ? 201 : 500).json({
+          success: result.affectedRows > 0,
+          message: result.affectedRows > 0 ? 'Post created successfully' : 'Failed to create post',
+          data: result.affectedRows > 0 ? { post_id: result.insertId } : null
+      });
     } catch (error) {
       console.error('Error creating post:', error.message);
-      res.status(500).json({ success: false, message: 'Failed to create post' });
+      res.status(500).json({ success: false, message: 'Failed to create post', data: null });
     }
   }
 

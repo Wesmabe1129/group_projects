@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import User from '../../models/user.js';
+import User from '../../models/User.js';
 
 class AccountController {
   constructor() {
@@ -15,6 +15,7 @@ class AccountController {
    *
    */
   async create(req, res) {
+    const { loginData } = req.body || {};
     const { username, password } = req.body || {};
   
     try {
@@ -24,6 +25,7 @@ class AccountController {
         return res.json({
           success: false,
           message: 'Username already exists. Please choose a different one.',
+          data: null
         });
       }
   
@@ -33,13 +35,15 @@ class AccountController {
       res.json({
         success: true,
         account_id: response?.insertId,
-        message: "Successfully Creating Account"
+        message: "Successfully Creating Account",
+        data: { account_id: response?.insertId }
       });
       res.end();
     } catch (err) {
       res.json({
         success: false,
         message: err.toString(),
+        data: null
       });
       res.end();
     }
@@ -54,7 +58,9 @@ class AccountController {
    */
   async login(req, res) {
     try {
-      const { username, password } = req.body || {};
+      const { loginData } = req.body || {};
+      const { username, password } = loginData || req.body || {};
+      // const { username, password } = req.body || {};
 
       const result = await this.user.verify(username, password);
 
@@ -62,6 +68,7 @@ class AccountController {
         return res.json({
           success: false,
           message: 'Invalid username or password',
+          data: null
         });
       }
 
@@ -78,6 +85,7 @@ class AccountController {
       res.json({
         success: false,
         message: err.toString(),
+        data: null
       });
       res.end()
     }

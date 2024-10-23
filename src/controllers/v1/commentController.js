@@ -20,14 +20,14 @@ class CommentController {
       // Use the Comment model's create method to add the comment to the database
       const result = await this.comment.create(parent_thread_id, title, content, accountId);
       console.log("result", result);
-      if (result.affectedRows > 0) {
-        return res.status(201).json({ success: true, message: 'Comment created successfully' });
-      } else {
-        return res.status(500).json({ success: false, message: 'Failed to create comment' });
-      }
+      res.status(result.affectedRows > 0 ? 201 : 500).json({
+          success: result.affectedRows > 0,
+          message: result.affectedRows > 0 ? 'Comment created successfully' : 'Failed to create comment',
+          data: result.affectedRows > 0 ? { comment_id: result.insertId } : null
+      });
     } catch (error) {
       console.error('Error creating comment:', error.message);
-      res.status(500).json({ success: false, message: 'Failed to create comment' });
+      res.status(500).json({ success: false, message: 'Failed to create comment', data: null });
     }
   }
 
@@ -41,11 +41,11 @@ class CommentController {
       
       const comments = await this.comment.fetchCommentByPostId(thread_id);
 
-      if (!comments.length) {
-        return res.status(200).json({ success: true, message: 'No comments available', data: [] });
-      }
-
-      res.json({ success: true, data: comments });
+      res.json({
+          success: true,
+          message: comments.length ? "Comments fetched successfully" : "No comments available",
+          data: { comments }
+      });
     } catch (error) {
       console.error('Error fetching comments:', error.message);
       res.status(500).json({ success: false, message: 'Failed to fetch comments' });

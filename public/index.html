@@ -150,22 +150,22 @@
                 return res.json();
               })
               .then(postsData => {
-                // console.log('Posts data:', postsData);
+                console.log('Posts data:', postsData);
                 if (postsData?.success) {
-                  
-                  if (postsData.data.length === 0) {
+                  const threads = postsData.data.threads;
+                  if (threads === 0) {
                     // No posts in the response
                     displayNoPostsMessage();
                     return;
                   }
                   
                   let postsHTML = '';
-                  postsData.data.forEach(post => {
+                  threads.forEach(post => {
                     // console.log(post.thread_id, "hahahasad");
                     const likes = post.likes || [];  // Ensure it's an array
                     const isLiked = likes.some(like => like.account_id === accountId); // Check if the user has liked
                     const likeButtonClass = isLiked ? 'liked' : '';
-                    
+                    console.log(post.thread_id, "this is thread id");
                     loadLike(post.thread_id)
                     postsHTML += `
                       <div class="post" id="post-${post.thread_id}">
@@ -206,7 +206,7 @@
                 }
               })
               .catch(err => {
-                console.log(err);
+                console.log(err, "errorsasdas");
                 alert('An error occurred while loading posts. Please try again later.');
                 localStorage.removeItem('token');
                 showLogin();
@@ -259,13 +259,15 @@
         .then(data => {
           if (data?.success) {
             const post = data.data;
+            console.log(data.data, "asdasdasd");
+            // console.log(post, "asdasdas")
             // <button onclick="loadComments('${post.id}')">View Comments</button>
 
-            console.log(post.thread_id);
+            // console.log(data.data.thread_id, "this is id");
 
-            const postElement = document.getElementById(`post-${post.thread_id}`);
-            console.log(postElement);
-            const likeButton = postElement.querySelector('.like-button');
+            // const postElement = document.getElementById(`post-${data.data.thread_id}`);
+            // console.log(postElement, "this is element");
+            const likeButton = document.querySelector('.like-button');
 
             const isLiked = likeButton.classList.toggle('liked')
 
@@ -369,10 +371,12 @@
         .then(res => res.json())
         .then(data => {
           if (data?.success) {
+            const comments = data.data.comments;
+            // console.log(comments, "this is comment");
             const commentsContainer = document.querySelector('.comments-container');
             let commentsHTML = '';
 
-            data.data.forEach(comment => {
+            comments.forEach(comment => {
                 console.log(comment.thread_id);
 
                 commentsHTML += `
