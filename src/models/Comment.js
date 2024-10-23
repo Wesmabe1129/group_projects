@@ -51,7 +51,6 @@ class Comment {
       ORDER BY created_at DESC
     `;
     
-    console.log(thread_id);
     try {
       const [comments] = await connection.execute(query, [thread_id]);
       return comments;

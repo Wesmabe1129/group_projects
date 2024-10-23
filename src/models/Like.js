@@ -1,36 +1,74 @@
-// const { DataTypes } = require('sequelize');
-import { DataTypes } from 'sequelize';
-// const sequelize = require('../config/database');
-import sequelize from '../config/database';
-// const Thread = require('./Thread');
-import Thread from './Thread';
-// const Comment = require('./Comment');
-import Comment from './Comment';
+import { connection } from '../core/database.js';
 
-// Define the Like model
-const Like = sequelize.define('Like', {
-    thread_id: {
-        type: DataTypes.INTEGER,
-        references: {
-            model: Thread,
-            key: 'id'
-        },
-        allowNull: true,
-        onDelete: 'CASCADE'
-    },
-    comment_id: {
-        type: DataTypes.INTEGER,
-        references: {
-            model: Comment,
-            key: 'id'
-        },
-        allowNull: true,
-        onDelete: 'CASCADE'
+class Like {
+  /**
+   * Add a like to a post
+   * 
+   * @param {number} post_id - The ID of the post being liked
+   * @param {number} account_id - The ID of the user who likes the post
+   * @returns {Promise<object>} - The result of the insert query
+   */
+  async add(thread_id, account_id) {
+    const query = `
+      INSERT INTO likes (account_id, thread_id)
+      VALUES (?, ?)
+    `;
+    
+    try {
+      const [result] = await connection.execute(query, [account_id, thread_id]);
+      return result;
+    } catch (err) {
+      console.error('Error adding like:', err.message);
+      throw err;
     }
-}, {
-    timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: false
-});
+  }
 
-module.exports = Like;
+  /**
+   * Remove a like from a post
+   * 
+   * @param {number} post_id - The ID of the post to unlike
+   * @param {number} account_id - The ID of the user who wants to remove the like
+   * @returns {Promise<void>}
+   */
+  async remove(thread_id, account_id) {
+    console.log('thread_id:', thread_id);
+    console.log('account_id:', account_id);
+
+    const query = `
+      DELETE FROM likes
+      WHERE thread_id = ? AND account_id = ?
+    `;
+
+    try {
+      const [result] = await connection.execute(query, [thread_id, account_id]);
+      console.log('Delete result:', result);
+      return result;
+    } catch (err) {
+      console.error('Error removing like:', err.message);
+      throw err;
+    }
+  }
+
+  /**
+   * Get all likes for a specific post
+   * 
+   * @param {number} post_id - The ID of the post
+   * @returns {Promise<object[]>} - An array of likes
+   */
+  async getAllLikes(thread_id) {
+    const query = `
+      SELECT * FROM likes
+    `;
+    
+    try {
+      const [likes] = await connection.execute(query);
+      // console.log(likes, "adsadasd")
+      return likes;
+    } catch (err) {
+      console.error('Error fetching likes:', err.message);
+      throw err;
+    }
+  }
+}
+
+export default Like;

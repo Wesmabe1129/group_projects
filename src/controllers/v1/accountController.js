@@ -32,9 +32,8 @@ class AccountController {
   
       res.json({
         success: true,
-        data: {
-          recordIndex: response?.insertId
-        },
+        account_id: response?.insertId,
+        message: "Successfully Creating Account"
       });
       res.end();
     } catch (err) {

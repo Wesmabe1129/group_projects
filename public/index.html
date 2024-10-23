@@ -123,6 +123,8 @@
               currentUsername = data.data.username;
               accountId = data.data.account_id;
 
+              console.log(accountId, "account id");
+
               const url = `${API_URL}/v1/thread`;
 
               fetch(url, {
@@ -159,16 +161,22 @@
                   
                   let postsHTML = '';
                   postsData.data.forEach(post => {
-                    console.log(post.thread_id);
+                    // console.log(post.thread_id, "hahahasad");
+                    const likes = post.likes || [];  // Ensure it's an array
+                    const isLiked = likes.some(like => like.account_id === accountId); // Check if the user has liked
+                    const likeButtonClass = isLiked ? 'liked' : '';
+                    
+                    loadLike(post.thread_id)
                     postsHTML += `
-                      <div class="post">
+                      <div class="post" id="post-${post.thread_id}">
                         <h2>${post.title}</h2>
                         <p>${post.content}</p>
+                        <button class="like-button ${likeButtonClass}" onclick="handleLike('${post.thread_id}')">Like</button>
                         <button onclick="loadPost('${post.thread_id}')">Comment</button>
+                        <button>Repost</button>
                       </div>
                     `;
                   });
-                  
 
                   // Inject the HTML into the root element
                   root.innerHTML = `
@@ -184,8 +192,9 @@
                       ${postsHTML}
                     </div>
                   `;
+                 
                   // console.log(posts);
-
+                  
                   // Set up event listeners for navigation buttons
                   document.getElementById('nav-search').addEventListener('click', handleSearch);
                   document.getElementById('nav-create').addEventListener('click', handleCreate);
@@ -251,12 +260,25 @@
           if (data?.success) {
             const post = data.data;
             // <button onclick="loadComments('${post.id}')">View Comments</button>
+
+            console.log(post.thread_id);
+
+            const postElement = document.getElementById(`post-${post.thread_id}`);
+            console.log(postElement);
+            const likeButton = postElement.querySelector('.like-button');
+
+            const isLiked = likeButton.classList.toggle('liked')
+
+            const likeButtonClass = isLiked ? 'liked' : '';
+
             root.innerHTML = `
               <div class="comments">
                 
-                <div class="head-post">
+                <div class="head_post">
                   <h2>${post.title}</h2>
                   <p>${post.content}</p>
+                  <button class="like-button ${likeButtonClass}" onclick="handleLike('${post.thread_id}')">Like</button>
+
                 </div>
 
                 <h3>Comments: </h3>
@@ -267,6 +289,7 @@
                   <p id="comment-title">@${currentUsername}</p>
                   <textarea placeholder="Add comment" class="comment-body" id="comment-body" required></textarea><br>
                   <button type="submit">comment</button>
+                  
               </form>
               <nav class="navbar">
                 <button id="nav-search">Search</button>
@@ -278,7 +301,6 @@
         
               `; // Replace this with your create page logic
               // <input type="text" id="thread-title" required>
-              
               loadComments(threadId);
 
 
@@ -336,17 +358,6 @@
         console.log(thread_id);
         const url = `${API_URL}/v1/thread/${thread_id}/comments`;
         console.log(url);
-
-        // try {
-        //     const response = fetch(url);
-        //     if (!response.ok) {
-        //         throw new Error(`HTTP error! status: ${response.status}`);
-        //     }
-        //     const comments = response.json();
-        //     // Process comments...
-        // } catch (error) {
-        //     console.error('Failed to load comments:', error);
-        // }
         fetch(url, {
           method: 'GET',
           headers: {
@@ -359,22 +370,36 @@
         .then(data => {
           if (data?.success) {
             const commentsContainer = document.querySelector('.comments-container');
-            const comments = data.data.map(comment => `
-              <div class="comment">
-                <h2>${comment.title}</h2>
-                <p>${comment.content}</p>
-                <button onclick="loadReplies('${thread_id}', '${comment.thread_id}')">View Replies</button>
-              </div>
-            `).join('');
+            let commentsHTML = '';
+
+            data.data.forEach(comment => {
+                console.log(comment.thread_id);
+
+                commentsHTML += `
+                    <div class="comment">
+                        <h2>${comment.title}</h2>
+                        <p>${comment.content}</p>
+                        <button>Like</button><button onclick="loadPost(${comment.thread_id})">Comment</button><button>Repost</button>
+                      </div>
+                        <div class="replies-container" id="replies-${comment.thread_id}" style="display: none;"></div>
+                    </div>
+                `;
+            });
+
+            commentsContainer.innerHTML += commentsHTML;
+
             
-            commentsContainer.innerHTML = comments; 
           }
         })
         .catch(err => console.log(err));
       }
 
-      function loadReplies(postId, commentId) {
-        fetch(`${API_URL}/v1/posts/${postId}/comments/${commentId}/replies`, {
+
+      function loadLike(thread_id) {
+        const url = `${API_URL}/v1/thread/${thread_id}/getLikes`;
+        // console.log(url);
+        fetch(url, {
+          method: 'GET',
           headers: {
             'accept': 'application/json',
             apikey: 'hello',
@@ -382,23 +407,72 @@
           }
         })
         .then(res => res.json())
+
         .then(data => {
           if (data?.success) {
-            const replies = data.data.map(reply => `
-              <div class="reply">
-                <p>${reply.content}</p>
-              </div>
-            `).join('');
+            const post = data.data;
+            // console.log(data.data.thread_id)
+            const postElement = document.getElementById(`post-${thread_id}`);
+            const likeButton = postElement.querySelector('.like-button');
+
+            const likes = post.likes || [];  // Ensure it's an array
+            const isLiked = likes.some(like => like.account_id === accountId); // Check if the user has liked
+            const likeButtonClass = isLiked ? 'liked' : '';
+
+            data.data.forEach(like => {
+                // console.log(like.account_id);
+
+                if (accountId === like.account_id && thread_id === like.thread_id) {
+                  likeButton.classList.add('liked');
+                  likeButton.style.color = 'blue';
+                }
+            });
+
             
-            root.innerHTML += `
-              <div class="replies">
-                ${replies}
-              </div>
-            `;
           }
+        })
+
+        .catch(err => console.log(err));
+      }
+
+      function handleLike(thread_id) {
+        const postElement = document.getElementById(`post-${thread_id}`);
+        const likeButton = postElement.querySelector('.like-button');
+        // console.log(likeButton)
+
+        const isLiked = likeButton.classList.toggle('liked');
+        
+        const method = isLiked ? 'POST' : 'DELETE';
+        const url = isLiked 
+        ? `${API_URL}/v1/thread/${thread_id}/like` 
+        : `${API_URL}/v1/thread/${thread_id}/unlike`;
+        
+        // const payload = JSON.stringify({ account_id: accountId });
+        const payload = JSON.stringify({ thread_id: thread_id, accountId: accountId });
+        // console.log(payload);
+        console.log(payload, "payssasdas");
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': 'hello',
+                'token': localStorage.getItem('token'),
+            },
+            body: payload,
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                likeButton.style.color = isLiked ? 'blue' : ''; // Change color if liked
+                loadLike(thread_id);
+            } else {
+                alert('Failed to like/unlike the post.');
+            }
         })
         .catch(err => console.log(err));
       }
+
+      
 
       function handleSearch() {
         root.innerHTML = `
