@@ -16,12 +16,13 @@ class threadController {
       // console.log(thread_id, "12");
       
      
-      const threads = await this.thread.fetchAll();
+      const { threads, accounts } = await this.thread.fetchAll();
+      
       // console.log(posts,'ETO YUNG POST HEHE')
       res.json({
           success: true,
           message: threads.length ? "Posts fetched successfully" : "No posts available",
-          data: { threads }
+          data: { threads, accounts }
       });
       
       // if (!thread_id) {

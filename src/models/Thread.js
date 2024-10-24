@@ -21,6 +21,7 @@ class Thread {
         'INSERT INTO threads (content, account_id, created_at) VALUES (?, ?, NOW())',
         [content, accountId]
       );
+      
       return results;
     } catch (err) {
       console.error('<error> thread.create', err);
@@ -86,10 +87,18 @@ class Thread {
     // console.log(this.thread_db,"owebfowbojfe")
     try {
       // console.log('Fetching posts for thread_id:'); // Log the thread_id
-      const [results] = await this.thread_db.execute(
+      const [threads] = await this.thread_db.execute(
         `SELECT * FROM threads WHERE parent_thread_id IS NULL`
       );
-      return results;
+      const [accounts] = await this.thread_db.execute(
+        'SELECT * FROM account'
+      );
+
+
+      return {
+        "threads": threads,
+        "accounts": accounts
+      }
     } catch (err) {
       console.error('<error> thread.fetchAll', err.message); // Log error message
       throw new Error('Database query failed'); // Throw a new error with a more descriptive message

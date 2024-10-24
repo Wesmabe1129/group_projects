@@ -13,6 +13,7 @@
       const root = document.getElementById('root');
       let currentUsername = '';
       let accountId = 0;
+      
       // const likeCount = {
       //   "likeCounter": 0,
       //   "accountId": accountId,
@@ -158,6 +159,9 @@
               .then(postsData => {
                 if (postsData?.success) {
                   const threads = postsData.data.threads;
+                  const thread_title = setUpTitle(postsData);
+                  console.log(thread_title)
+
                   // if (threads === 0) {
                   //   // No posts in the response
                   //   displayNoPostsMessage();
@@ -185,7 +189,7 @@
                     
                     postsHTML += `
                       <div id="post" class="post-${post.thread_id}">
-                        <h2>${post.title}</h2>
+                        <h2>${thread_title[post.thread_id]}</h2>
                         <p>${post.content}</p>
                         <span class="like-counter">0</span>
                         <button class="like-button ${likeButtonClass}" onclick="handleLike('${post.thread_id}')">Like</button>
@@ -272,13 +276,14 @@
           if (data?.success) {
             const post = data.data;
             console.log(data.data, "asdasdasd");
+            const comment_title = setUpTitle(data);
             
 
             root.innerHTML = `
               <div class="comments">
                 
                 <div class="post-${post.thread_id}">
-                  <h2>${post.title}</h2>
+                  <h2>${comment_title[post.thread_id]}</h2>
                   <p>${post.content}</p>
                   <span class="like-counter">0</span>
                   <button class="like-button" onclick="handleLike('${post.thread_id}')">Like</button>
@@ -383,7 +388,7 @@
 
                 commentsHTML += `
                     <div class="post-${comment.thread_id}">
-                        <h2>${comment.title}</h2>
+                        <h2>${thread_title}</h2>
                         <p>${comment.content}</p>
                         <span class="like-counter">0</span>
                         <button class="like-button" onclick="handleLike('${comment.thread_id}')">Like</button>
@@ -675,6 +680,23 @@
         document.getElementById('nav-notif').addEventListener('click', handleNotif);
         document.getElementById('nav-profile').addEventListener('click', handleProfile);
       }
+
+      function setUpTitle(data) {
+        const threads = data.data.threads;
+        const accounts = data.data.accounts;
+        const threadTitles = {};
+
+        accounts.forEach(account => {
+          threads.forEach(thread => {
+            if (account.account_id === thread.account_id) {
+              threadTitles[thread.thread_id] = `@${account.username}`;
+            }
+          });
+        });
+
+        return threadTitles;
+      }
+
 
 
       function showProfile() {
