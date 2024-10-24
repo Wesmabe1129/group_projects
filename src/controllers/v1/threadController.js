@@ -1,5 +1,5 @@
 // controllers/v1/postsController.js
-import Thread from '../../models/thread.js'; // Adjust the path as necessary
+import Thread from '../../models/Thread.js'; // Adjust the path as necessary
 
 class threadController {
   constructor() {
@@ -62,7 +62,7 @@ class threadController {
     try {
 
       const { postData } = req.body || {};
-      const { title, content, accountId } = req.body || postData[0] || {};
+      const { content, accountId } = req.body || postData[0] || {};
 
 
       // console.log(req,"habrdbiaebfopwb")
@@ -70,12 +70,12 @@ class threadController {
 
       // Validate the required fields
       console.log(req.body, "hello")
-      if (!title || !content || !accountId) {
-        return res.status(400).json({ success: false, message: 'Title, content, and account ID are required', data: null });
+      if (!content || !accountId) {
+        return res.status(400).json({ success: false, message: 'Content, and account ID are required', data: null });
       }
 
       // Use the Thread model's create method to add the post to the database
-      const result = await this.thread.create(title, content, accountId);
+      const result = await this.thread.create(content, accountId);
 
       res.status(result.affectedRows > 0 ? 201 : 500).json({
           success: result.affectedRows > 0,

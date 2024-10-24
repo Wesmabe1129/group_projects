@@ -10,7 +10,7 @@ class CommentController {
    */
   async createComment(req, res) {
     try {
-      const { parent_thread_id, title, content, accountId } = req.body;
+      const { parent_thread_id, content, accountId } = req.body;
 
       // Validate the required fields
       if (!parent_thread_id || !content || !accountId) {
@@ -18,7 +18,7 @@ class CommentController {
       }
 
       // Use the Comment model's create method to add the comment to the database
-      const result = await this.comment.create(parent_thread_id, title, content, accountId);
+      const result = await this.comment.create(parent_thread_id, content, accountId);
       console.log("result", result);
       res.status(result.affectedRows > 0 ? 201 : 500).json({
           success: result.affectedRows > 0,

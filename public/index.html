@@ -158,13 +158,21 @@
               .then(postsData => {
                 if (postsData?.success) {
                   const threads = postsData.data.threads;
-                  if (threads === 0) {
-                    // No posts in the response
-                    displayNoPostsMessage();
-                    return;
+                  // if (threads === 0) {
+                  //   // No posts in the response
+                  //   displayNoPostsMessage();
+                  //   console.log("hello");
+                    
+                  // }
+                  let postsHTML = '';
+                  if (postsData.length === 0) {
+                    // console.log(postsData.message);
+                    postsHTML += `
+                      <h3>${postsData.message}</h3>
+                    `
                   }
                   
-                  let postsHTML = '';
+                  // let postsHTML = '';
                   threads.forEach(post => {
                     // console.log(post.thread_id, "hahahasad")
                     const likes = post.likes || [];
@@ -174,7 +182,7 @@
                     // console.log(post.thread_id, "this is thread id");
                     
                     // loadLike(post.thread_id)
-
+                    
                     postsHTML += `
                       <div id="post" class="post-${post.thread_id}">
                         <h2>${post.title}</h2>
@@ -201,6 +209,7 @@
                       ${postsHTML}
                     </div>
                   `;
+                  // console.log("no post", postsData);
                  
                   // console.log(posts);
                   
@@ -364,7 +373,11 @@
             // console.log(comments, "this is comment");
             const commentsContainer = document.querySelector('.comments-container');
             let commentsHTML = '';
-
+            if (comments.length === 0) {
+              commentsHTML += `
+                <h3>${data.message}</h3>
+              `
+            }
             comments.forEach(comment => {
                 console.log(comment.thread_id);
 

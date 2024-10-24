@@ -14,15 +14,15 @@ class Comment {
 
 
 
-  async create(parent_thread_id, title, content, accountId) {
+  async create(parent_thread_id, content, accountId) {
     const query = `
-      INSERT INTO threads (title, content, account_id, parent_thread_id, created_at)
-      VALUES (?, ?, ?, ?, NOW())
+      INSERT INTO threads (content, account_id, parent_thread_id, created_at)
+      VALUES (?, ?, ?, NOW())
     `;
 
-    console.log("Values being passed:", { parent_thread_id, title, content, accountId });
+    console.log("Values being passed:", { parent_thread_id, content, accountId });
 
-    const values = [title, content, accountId, parent_thread_id];
+    const values = [content, accountId, parent_thread_id];
     console.log(values);
     try {
       const [result] = await connection.execute(query, values);

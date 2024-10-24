@@ -15,11 +15,11 @@ class Thread {
    * @returns {Object}
    * @throws {Error}
    */
-  async create(title, content, accountId) {
+  async create(content, accountId) {
     try {
       const [results,] = await this.thread_db.execute(
-        'INSERT INTO threads (title, content, account_id, created_at) VALUES (?, ?, ?, NOW())',
-        [title, content, accountId]
+        'INSERT INTO threads (content, account_id, created_at) VALUES (?, ?, NOW())',
+        [content, accountId]
       );
       return results;
     } catch (err) {
