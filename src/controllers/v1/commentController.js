@@ -10,7 +10,9 @@ class CommentController {
    */
   async createComment(req, res) {
     try {
-      const { parent_thread_id, content, accountId } = req.body;
+      const { comments } = req.body || {};
+      // const { parent_thread_id, content, accountId } = req.body;
+      const { parent_thread_id, content, accountId } = comments[0] || {};;
 
       // Validate the required fields
       if (!parent_thread_id || !content || !accountId) {

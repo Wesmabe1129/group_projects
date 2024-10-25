@@ -16,13 +16,13 @@ class threadController {
       // console.log(thread_id, "12");
       
      
-      const { threads, accounts } = await this.thread.fetchAll();
+      const { threads } = await this.thread.fetchAll();
       
       // console.log(posts,'ETO YUNG POST HEHE')
       res.json({
           success: true,
           message: threads.length ? "Posts fetched successfully" : "No posts available",
-          data: { threads, accounts }
+          data: { threads }
       });
       
       // if (!thread_id) {
@@ -62,8 +62,9 @@ class threadController {
   async createPost(req, res) {
     try {
 
-      const { postData } = req.body || {};
-      const { content, accountId } = req.body || postData[0] || {};
+      const { threadData } = req.body || {};
+      // const { content, accountId } = req.body || threadData[0] || {};
+      const { content, accountId } = threadData[0] || {};
 
 
       // console.log(req,"habrdbiaebfopwb")
@@ -80,7 +81,7 @@ class threadController {
 
       res.status(result.affectedRows > 0 ? 201 : 500).json({
           success: result.affectedRows > 0,
-          message: result.affectedRows > 1 ? 'Post created successfully' : 'Failed to create post',
+          message: result.affectedRows > 0 ? 'Post created successfully' : 'Failed to create post',
           data: result.affectedRows > 0 ? { post_id: result.insertId } : null
       });
     } catch (error) {

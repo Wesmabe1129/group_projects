@@ -99,6 +99,39 @@ class User {
       throw err;
     }
   }
+  
+  async getProfile(account_id) {
+    try {
+      const [accounts] = await connection.execute(
+        'SELECT * FROM account WHERE account_id = ?',
+        [account_id]
+      );
+      const [threads] = await connection.execute(
+        'SELECT * FROM threads WHERE parent_thread_id IS NULL AND account_id = ?',
+        [account_id]
+      );
+      const [comments] = await connection.execute(
+        'SELECT * FROM threads WHERE parent_thread_id IS NOT NULL AND account_id = ?',
+        [account_id]
+      );
+
+
+      // const [results,] = await connection.execute(
+      //   'SELECT account_id FROM account WHERE username = ?',
+      //   [username]
+      // );
+
+      return {
+        // account: accounts.length ? accounts[0] : null,
+        accounts: accounts.length ? accounts[0] : "NO ACCOUNT FOUND",
+        threads: threads.length ? threads[0] : "NO THREAD FOUND",
+        comments: comments.length ? comments[0] : "NO COMMENT FOUND"
+    };
+    } catch (err) {
+      console.error('<error> user.findByUsername', err);
+      throw err;
+    }
+  }
 }
 
 export default User;

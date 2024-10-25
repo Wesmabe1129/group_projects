@@ -15,8 +15,9 @@ class AccountController {
    *
    */
   async create(req, res) {
-    const { loginData } = req.body || {};
-    const { username, password } = req.body || {};
+    const { createAccountData } = req.body || {};
+    const { username, password } = createAccountData || {};
+    // const { username, password } = req.body || {};
   
     try {
       // Check if the username already exists
@@ -111,6 +112,36 @@ class AccountController {
           username: res.locals.username,
           // fullname: userInfo?.fullname,
         }
+      })
+      res.end();
+    } catch (err) {
+      res.json({
+        success: false,
+        message: err.toString(),
+      });
+    }
+  }
+
+  async getProfile(req, res) {
+    try {
+      // const { profile } = req.body || {};
+      // const { account_id } = profile || {};
+
+      const account_id = req.params.account_id;
+
+
+      const { accounts, threads, comments } = await this.user.getProfile(account_id);
+
+      res.json({
+        success: true,
+        data: {
+          "profile": account_id,
+          "accounts": accounts,
+          "threads": threads,
+          "comments": comments
+        }
+          
+        
       })
       res.end();
     } catch (err) {

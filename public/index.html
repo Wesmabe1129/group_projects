@@ -97,7 +97,7 @@
         const payload = JSON.stringify(Object.fromEntries(formData));
 
         fetch(`${API_URL}/v1/account`, {
-          method: 'POST',
+          method: 'PUT',
           headers: {
             'content-type': 'application/json',
             apikey: 'hello',
@@ -169,7 +169,7 @@
                     
                   // }
                   let postsHTML = '';
-                  if (postsData.length === 0) {
+                  if (threads.length === 0) {
                     // console.log(postsData.message);
                     postsHTML += `
                       <h3>${postsData.message}</h3>
@@ -681,21 +681,21 @@
         document.getElementById('nav-profile').addEventListener('click', handleProfile);
       }
 
-      function setUpTitle(data) {
-        const threads = data.data.threads;
-        const accounts = data.data.accounts;
-        const threadTitles = {};
+      // function setUpTitle(data) {
+      //   const threads = data.data.threads;
+      //   const accounts = data.data.accounts;
+      //   const threadTitles = {};
 
-        accounts.forEach(account => {
-          threads.forEach(thread => {
-            if (account.account_id === thread.account_id) {
-              threadTitles[thread.thread_id] = `@${account.username}`;
-            }
-          });
-        });
+      //   accounts.forEach(account => {
+      //     threads.forEach(thread => {
+      //       if (account.account_id === thread.account_id) {
+      //         threadTitles[thread.thread_id] = `@${account.username}`;
+      //       }
+      //     });
+      //   });
 
-        return threadTitles;
-      }
+      //   return threadTitles;
+      // }
 
 
 

@@ -97,7 +97,6 @@ class Thread {
 
       return {
         "threads": threads,
-        "accounts": accounts
       }
     } catch (err) {
       console.error('<error> thread.fetchAll', err.message); // Log error message
